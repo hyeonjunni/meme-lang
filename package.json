@@ -8,7 +8,5 @@
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "uuid": "^3.3.2"
-  }
+  "dependencies": {}
 }
