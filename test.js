@@ -1,3 +1,4 @@
+/* eslint-env mocha */
 const L = require('./lexer')
 const P = require('./parser')
 const S = require('./symbol')
@@ -16,7 +17,7 @@ for (c = 0; c < a.length; c = c + 1) {
 }
 
 if ('S'.standsFor('Smile')) {
-  print('Smile!')
+ print('Smile!')
 }
 
 times (i, 10) {
@@ -35,7 +36,9 @@ d := 'asdf'
 
 print(d[1])
 
-e = ['asdf']
+e = ['asdf', 2,
+  '1234',34
+]
 
 e.push('asdfasdf')
 
@@ -43,7 +46,31 @@ print(e)
 
 print(e[0])
 
-print(random.randInt(10))
+print(random.choice(e))
+
+e[2] = 'aswdfasdfadsf'
+
+print(e)
+
+run('print(\\'YAY\\')\\n\\nprint(\\'asdf\\')')
+
+f = {
+  'asdfasdf': 'asdf'
+}
+
+g := func (asdf, asdff,fd,
+  asdfasdf
+) {
+  print(asdf, asdff, fd, asdfasdf)
+}
+
+g('a', 'b', 'c', 'd')
+
+print(f['asdfasdf'])
+
+// This code doesn't work: g = 'asdfasdf'
+
+/* And this too: f.asdfasdf */
 
 `)
 

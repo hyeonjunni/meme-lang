@@ -54,7 +54,7 @@ module.exports = (string) => {
     if (['\'', '"'].includes(char)) {
       i++
       let a = ''
-      while (!(['\'', '"'].includes(string[i])) || !string[i - 1] === '\n') {
+      while (!(['\'', '"'].includes(string[i]) && string[i - 1] !== '\\') || !string[i - 1] === '\n') {
         a += string[i]
         i++
       }
@@ -62,6 +62,9 @@ module.exports = (string) => {
       if (a.endsWith('\n')) {
         throw new Error('Error: Didn\'t close string.')
       }
+      a = a.replace(/\\'/gi, '\'')
+      a = a.replace(/\\"/gi, '"')
+      a = a.replace(/\\n/gi, '\n')
       tokens.push(new Token('STRING', a))
       continue
     }
@@ -85,7 +88,7 @@ module.exports = (string) => {
       continue
     }
     if (char === '/' && string[i + 1] === '*') {
-      while (string[i] !== '*' && string[i] !== '/') {
+      while (string[i - 2] !== '*' || string[i - 1] !== '/') {
         i++
       }
       continue
@@ -207,8 +210,8 @@ module.exports = (string) => {
       i++
       continue
     }
-    if (char === '.') {
-      tokens.push(new Token('.', char))
+    if (char === ':') {
+      tokens.push(new Token(':', char))
       i++
       continue
     }

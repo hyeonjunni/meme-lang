@@ -64,6 +64,14 @@ module.exports = class SymbolTableInterpreter {
     return Builtin.convert(node.value)
   }
 
+  visitDict (node) {
+    let value = {}
+    node.values.forEach(x => {
+      value[this.visit(x.left).value] = this.visit(x.right).value
+    })
+    return Builtin.convert(value)
+  }
+
   visitUnaryOp (node) {
     let op = node.op.type
     if (op === '+') {
@@ -193,6 +201,19 @@ module.exports = class SymbolTableInterpreter {
 
   visitNormalGet (node) {
     return Builtin.convert(this.visit(node.from).value[this.visit(node.get).value])
+  }
+
+  visitVarSet (node) {
+    let varName = node.varName
+    let varSymbol = this.currentState.lookup(varName) || Builtin[varName]
+    if (typeof varSymbol === 'undefined') {
+      throw new Error(`Variable ${varName} not found.`)
+    }
+    varSymbol.value[this.visit(node.token.get).value] = this.visit(node.set).value
+  }
+
+  visitNormalSet (node) {
+    this.visit(node.from.from).value[this.visit(node.from.get).value] = this.visit(node.set).value
   }
 
   visitCall (node) {

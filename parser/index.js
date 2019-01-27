@@ -20,6 +20,10 @@ const VarGetParser = require('./varGet')
 const NormalGetParser = require('./normalGet')
 const ArrayParser = require('./array')
 const ImportParser = require('./import')
+const VarSetParser = require('./varSet')
+const NormalSetParser = require('./normalSet')
+const DictLR = require('./dictLR')
+const DictParser = require('./dict')
 
 const BoolOps = ['==', '!=', '>', '<', '<=', '>=', '||', '&&']
 
@@ -55,9 +59,11 @@ module.exports = class Parser {
 
     while (this.tokens[this.indexToken].type === ';' || this.tokens[this.indexToken].type === '\n') {
       if (this.tokens[this.indexToken].type === ';') {
-        this.checker(';')
+        this.indexToken++
+      } else if (this.tokens[this.indexToken].type === '\n') {
+        this.indexToken++
       } else {
-        this.checker('\n')
+        throw new Error(`Error! Type: ${this.tokens[this.indexToken].type} Expected: ; or \n`)
       }
       results.push(this.statement())
     }
@@ -74,6 +80,8 @@ module.exports = class Parser {
       node = this.callStatement()
     } else if (this.tokens[this.indexToken + 1].type === '.') {
       node = this.dotStatement()
+    } else if (this.tokens[this.indexToken + 1].type === '[') {
+      node = this.assignmentSetStatement()
     } else if (token.type === 'IF') {
       node = this.ifStatement()
     } else if (token.type === 'WHILE') {
@@ -186,14 +194,31 @@ module.exports = class Parser {
     while (this.tokens[this.indexToken].type !== ')') {
       vars.push(this.tokens[this.indexToken])
       this.checker('ID')
-      if (this.tokens[this.indexToken].type !== ')') {
+      if (this.tokens[this.indexToken].type === ',') {
         this.checker(',')
+      }
+      if (this.tokens[this.indexToken].type === '\n') {
+        this.indexToken++
+      }
+      if (this.tokens[this.indexToken].type === ';') {
+        this.indexToken++
       }
     }
     this.checker(')')
     let node = this.compoundStatement()
 
     return new FuncParser(vars, node)
+  }
+
+  assignmentSetStatement () {
+    let left = this.exce()
+    this.checker('=')
+    let right = this.exce()
+    if (left.name === 'VarGet') {
+      return new VarSetParser(left, right)
+    } else {
+      return new NormalSetParser(left, right)
+    }
   }
 
   assignmentStatement () {
@@ -218,6 +243,12 @@ module.exports = class Parser {
       if (this.tokens[this.indexToken].type === ',') {
         this.checker(',')
       }
+      if (this.tokens[this.indexToken].type === '\n') {
+        this.indexToken++
+      }
+      if (this.tokens[this.indexToken].type === ';') {
+        this.indexToken++
+      }
     }
     this.checker(')')
 
@@ -231,6 +262,12 @@ module.exports = class Parser {
   }
 
   checker (name) {
+    if (this.tokens[this.indexToken].type === '\n' && name !== '\n') {
+      this.indexToken++
+    }
+    if (this.tokens[this.indexToken].type === ';' && name !== ';') {
+      this.indexToken++
+    }
     if (this.tokens[this.indexToken].type === name) {
       this.indexToken++
     } else {
@@ -239,6 +276,12 @@ module.exports = class Parser {
   }
 
   getNumber () {
+    if (this.tokens[this.indexToken].type === '\n') {
+      this.indexToken++
+    }
+    if (this.tokens[this.indexToken].type === ';') {
+      this.indexToken++
+    }
     let token = this.tokens[this.indexToken]
     if (token.type === 'NUMBER') {
       this.checker('NUMBER')
@@ -273,9 +316,35 @@ module.exports = class Parser {
         if (this.tokens[this.indexToken].type === ',') {
           this.checker(',')
         }
+        if (this.tokens[this.indexToken].type === '\n') {
+          this.indexToken++
+        }
+        if (this.tokens[this.indexToken].type === ';') {
+          this.indexToken++
+        }
       }
       this.checker(']')
       return new ArrayParser(vars)
+    } else if (token.type === '{') {
+      this.checker('{')
+      let vars = []
+      while (this.tokens[this.indexToken].type !== '}') {
+        let left = this.exce()
+        this.checker(':')
+        let right = this.exce()
+        vars.push(new DictLR(left, right))
+        if (this.tokens[this.indexToken].type === ',') {
+          this.checker(',')
+        }
+        if (this.tokens[this.indexToken].type === '\n') {
+          this.indexToken++
+        }
+        if (this.tokens[this.indexToken].type === ';') {
+          this.indexToken++
+        }
+      }
+      this.checker('}')
+      return new DictParser(vars)
     } else {
       return this.variable()
     }

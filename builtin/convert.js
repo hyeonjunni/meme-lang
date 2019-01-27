@@ -2,6 +2,7 @@ const Stringg = require('./string')
 const Numberr = require('./number')
 const Booleann = require('./boolean')
 const Arrayy = require('./array')
+const Dict = require('./dict')
 
 module.exports = (a) => {
   if (typeof a === 'string') {
@@ -12,5 +13,8 @@ module.exports = (a) => {
     return new Booleann(a)
   } else if (Array.isArray(a)) {
     return new Arrayy(a)
+  } else if (typeof a === 'object' && !(a instanceof Function)) {
+    return new Dict(a)
   }
+  return a
 }
